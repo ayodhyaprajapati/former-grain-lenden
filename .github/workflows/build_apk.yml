@@ -24,11 +24,25 @@ jobs:
       with:
         gradle-version: '8.7'
 
-    - name: Build Debug APK
-      run: gradle assembleDebug --stacktrace
+    - name: Find Project and Build APK
+      run: |
+        # Search for settings.gradle.kts anywhere in the repo
+        SETTINGS_PATH=$(find . -name "settings.gradle.kts" -o -name "settings.gradle" | head -n 1)
+
+        if [ -z "$SETTINGS_PATH" ]; then
+          echo "❌ ERROR: Could not find settings.gradle.kts anywhere in your repo!"
+          echo "Files currently in your repository:"
+          ls -R
+          exit 1
+        fi
+
+        PROJECT_DIR=$(dirname "$SETTINGS_PATH")
+        echo "✅ Found project located in: $PROJECT_DIR"
+        cd "$PROJECT_DIR"
+        gradle assembleDebug --stacktrace
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
       with:
         name: Former-Grain-LenDen-APK
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: "**/app-debug.apk"
